@@ -1,0 +1,38 @@
+pragma solidity >=0.7.0< 0.9.0;
+
+contract Coin
+{
+      address public minter ;
+      mapping(address=>uint) public balances;// Similar to dictonary
+      event Sent(address from , address to , uint amount); // Basically for locking the information 
+
+      constructor()
+      {
+          minter = msg.sender; // address of the wallet
+      }
+
+      function mint(address receiver , uint amount) public
+      {
+         require(msg.sender == minter,"Invalid Sender");
+         require(amount < 1e60,"Amount beyond the 1e60");
+         balances[receiver]+=amount;
+      }
+
+      function take(address receiver,uint amount) public
+      {
+          require(minter == receiver);
+          require(amount<=balances[minter],"InSufficent balance");
+          balances[minter]-=amount;
+      }
+
+      function send(address receiver , uint amount) public
+      {
+         require(minter != receiver , "You cant send it to yourself");
+         require(amount<=balances[msg.sender],"InSufficent balance");
+         balances[receiver]+=amount;
+         balances[minter]-=amount;
+         emit Sent(msg.sender,receiver,amount);// Basically for locking the information 
+      }
+
+
+}
