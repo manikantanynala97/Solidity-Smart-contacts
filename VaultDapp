@@ -1,0 +1,75 @@
+pragma solidity >=0.7.0< 0.9.0;
+contract VaultDApp
+{
+  mapping(address=>uint) public balances;// Bascially creating the unique address to each of the user and storing the amount of each user .
+  uint public Person_count = 0;// total count of the users
+  address public owner;// owner of the smart contract
+  address[] public arrayName ;// for storing the address of the users in an array 
+  event Owner(address from , address to);// for locking the information
+  constructor()
+  {
+      owner = msg.sender;
+  }
+  
+
+   function JoinVault(address Joined_Person, uint amount ) public
+   {
+       if(Person_count == 0) // If this the first person to add in the JoinVault
+       {
+           balances[Joined_Person]+=amount;
+           arrayName.push(Joined_Person);
+       }
+       
+       else if(Person_count > 0)
+       {
+         uint distributed_amount = (amount/10) ;// 10 percent amount is distributed
+         distributed_amount = distributed_amount / Person_count;// It is distributed among all the exisiting users eqaully
+         require(distributed_amount>=1,"No Amount can be distributed");// If distributed amount is less than one then we cant distribute to all people since less than 1 is basically 0.something so it is basically 0
+         for(uint i=0;i<arrayName.length;i++)
+         {
+            balances[arrayName[i]]+=distributed_amount;// distributed amount
+         }
+          balances[Joined_Person]+=(amount/100)*90;//rest 90 percent amount is stored in the user account
+          arrayName.push(Joined_Person);//pushing the address of the person in the array
+       }  
+       
+       Person_count+=1;// incrementing the count of the user
+   }
+
+
+  function ChangeOwner(address Present_owner , address Next_Owner) public
+  {
+      require(Present_owner == owner , "Only current owner can change");
+      owner = Next_Owner;
+      emit Owner( Present_owner , Next_Owner);// Locking the information in the blockchain
+  }
+
+  function WithDraw(address person ) public
+  {
+      balances[person] = (balances[person] / 100) * 3;// withdrawing all the 97 percent amount and the rest 3 percent is in the smart contract
+  }
+
+  function Balances(address person) public view returns (uint)
+  {
+        return balances[person];// returns the balance of the specified user
+  }
+
+
+  function Deposit2(address present_owner , address payable _to) public payable 
+  {
+        require(owner == present_owner , "Only owner can deposit the ether  to smart contract");
+        bool sent = _to.send(msg.value);
+        require(sent, "Failed to send Ether");
+  }
+
+}
+
+contract ReceiveEther {
+   
+    // Fallback function is called when msg.data is not empty
+    fallback() external payable {}
+
+    function getBalance() public view returns (uint) {
+        return address(this).balance;
+    }
+}
