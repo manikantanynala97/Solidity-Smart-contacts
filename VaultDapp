@@ -18,10 +18,23 @@ contract VaultDApp
        {
            balances[Joined_Person]+=amount;
            arrayName.push(Joined_Person);
+           Person_count+=1;// incrementing the count of the user
        }
        
        else if(Person_count > 0)
        {
+         bool Exisiting_person = false;
+
+         for(uint i=0;i<arrayName.length;i++)//  To check the entered person is a new person or not 
+          {
+              if(Joined_Person == arrayName[i])// If the Joined person is already there 
+              {
+                  Exisiting_person = true ;// then set the exisiting person as true because we should not increase the person_count
+                  break;
+              }
+            
+          }
+         
          uint distributed_amount = (amount/10) ;// 10 percent amount is distributed
          distributed_amount = distributed_amount / Person_count;// It is distributed among all the exisiting users eqaully
          require(distributed_amount>=1,"No Amount can be distributed");// If distributed amount is less than one then we cant distribute to all people since less than 1 is basically 0.something so it is basically 0
@@ -31,9 +44,13 @@ contract VaultDApp
          }
           balances[Joined_Person]+=(amount/100)*90;//rest 90 percent amount is stored in the user account
           arrayName.push(Joined_Person);//pushing the address of the person in the array
+          if(Exisiting_person == false)// if the user has JoinVault for the first time then we need to increment the person count
+          {
+            Person_count+=1;// incrementing the count of the user
+          }
+         
        }  
        
-       Person_count+=1;// incrementing the count of the user
    }
 
 
