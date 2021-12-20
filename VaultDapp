@@ -7,6 +7,10 @@ contract VaultDApp
   address[] public arrayName ;// for storing the address of the users in an array 
   event Owner(address from , address to);// for locking the information
   mapping(address=>uint) private Person_ID;// Basically creating the unique Person Id for each unique user address and making it private
+  mapping(address=>uint) public EtherSentByOwnerToSmartContract;//all the ether amount in stored in a map to a smart contract by the owner
+  address[] EtherAdress;//all the owner address who sent ether to the smart contract
+
+  
   constructor()
   {
       owner = msg.sender;
@@ -94,22 +98,26 @@ contract VaultDApp
         return balances[person];// returns the balance of the specified user
   }
 
+    function Deposit2() external payable // depositing ether to the smart contract by the owner
+      {
+        require(msg.sender == owner , "Only owner can send ether");
+        require(msg.value > 1000 , "Only more than 1000 units  can sent");
+        EtherSentByOwnerToSmartContract[owner]+=msg.value;
+        EtherAdress.push(owner);
+      }
 
-  function Deposit2(address present_owner , address payable _to) public payable 
-  {
-        require(owner == present_owner , "Only owner can deposit the ether  to smart contract");
-        bool sent = _to.send(msg.value);
-        require(sent, "Failed to send Ether");
-  }
+      function BalanceOfEtherSentByOwnerToTheSmartContract() public view returns(uint)
+      {
+          return EtherSentByOwnerToSmartContract[owner];
+      }
+       
+    function Withdraw2(address Person) public // WithDrawing ether from the smart contract sent by the owner
+    {
+       require(Person == owner, "This address has never deposited any ether to smartcontract so this address cant withdraw ether from smart contract");
+       EtherSentByOwnerToSmartContract[Person]= 0;
+    } 
+ 
 
 }
 
-contract ReceiveEther {
-   
-    // Fallback function is called when msg.data is not empty
-    fallback() external payable {}
 
-    function getBalance() public view returns (uint) {
-        return address(this).balance;
-    }
-}
