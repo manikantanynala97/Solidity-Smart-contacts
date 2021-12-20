@@ -56,6 +56,16 @@ contract VaultDApp
 
   function AddAmount(address Joined_Person , uint person_ID ,uint amount) public
   {
+       bool Exisiting_person = false;
+       for(uint i=0;i<arrayName.length;i++)//  To check the entered person is a new person or not 
+          {
+              if(Joined_Person == arrayName[i])// If the Joined person is already there 
+              {
+                  Exisiting_person = true ;// then set the exisiting person as true because we should not increase the person_count
+                  break;
+              }
+          }
+        require(Exisiting_person == true , "You need to first JoinVault First");
         require(person_ID == Person_ID[Joined_Person] , "Invalid Person_Id or not a right user");
          uint distributed_amount = (amount/10) ;// 10 percent amount is distributed
          distributed_amount = distributed_amount / Person_count;// It is distributed among all the exisiting users eqaully
