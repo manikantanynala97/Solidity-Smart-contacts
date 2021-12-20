@@ -6,6 +6,7 @@ contract VaultDApp
   address public owner;// owner of the smart contract
   address[] public arrayName ;// for storing the address of the users in an array 
   event Owner(address from , address to);// for locking the information
+  mapping(address=>uint) private Person_ID;// Basically creating the unique Person Id for each unique user address and making it private
   constructor()
   {
       owner = msg.sender;
@@ -17,8 +18,9 @@ contract VaultDApp
        if(Person_count == 0) // If this the first person to add in the JoinVault
        {
            balances[Joined_Person]+=amount;
+           Person_ID[Joined_Person]=Person_count+10;// Creating a private person id 
            arrayName.push(Joined_Person);
-           Person_count+=1;// incrementing the count of the user
+           Person_count+=1;// incrementing the count of the user 
        }
        
        else if(Person_count > 0)
@@ -32,9 +34,8 @@ contract VaultDApp
                   Exisiting_person = true ;// then set the exisiting person as true because we should not increase the person_count
                   break;
               }
-            
           }
-         
+         require(Exisiting_person == false , "Already exist and use AddAmount Function");
          uint distributed_amount = (amount/10) ;// 10 percent amount is distributed
          distributed_amount = distributed_amount / Person_count;// It is distributed among all the exisiting users eqaully
          require(distributed_amount>=1,"No Amount can be distributed");// If distributed amount is less than one then we cant distribute to all people since less than 1 is basically 0.something so it is basically 0
@@ -43,16 +44,28 @@ contract VaultDApp
             balances[arrayName[i]]+=distributed_amount;// distributed amount
          }
           balances[Joined_Person]+=(amount/100)*90;//rest 90 percent amount is stored in the user account
+          Person_ID[Joined_Person]=Person_count+10;
           arrayName.push(Joined_Person);//pushing the address of the person in the array
           if(Exisiting_person == false)// if the user has JoinVault for the first time then we need to increment the person count
           {
             Person_count+=1;// incrementing the count of the user
           }
-         
        }  
        
    }
 
+  function AddAmount(address Joined_Person , uint person_ID ,uint amount) public
+  {
+        require(person_ID == Person_ID[Joined_Person] , "Invalid Person_Id or not a right user");
+         uint distributed_amount = (amount/10) ;// 10 percent amount is distributed
+         distributed_amount = distributed_amount / Person_count;// It is distributed among all the exisiting users eqaully
+         require(distributed_amount>=1,"No Amount can be distributed");// If distributed amount is less than one then we cant distribute to all people since less than 1 is basically 0.something so it is basically 0
+         for(uint i=0;i<arrayName.length;i++)
+         {
+            balances[arrayName[i]]+=distributed_amount;// distributed amount
+         }
+         balances[Joined_Person]+=(amount/100)*90;//rest 90 percent amount is stored in the user account 
+  }
 
   function ChangeOwner(address Present_owner , address Next_Owner) public
   {
