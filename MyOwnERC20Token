@@ -1,0 +1,117 @@
+pragma solidity >= 0.7.0<0.9.0 // solidity version
+
+contract My_ERC20_Interface // ERC20 Internface Contract
+{
+    function SendingTokensToYourOwnAccount(uint TotalNoOfTokens) public; 
+    function TotalSupply() public view returns (uint256);
+    function BurningTokens(uint TotalNoOfTokensToBeRemoved) public ;
+    function BalanceOf(address TokenOwner) public view returns (uint);
+    function TokensAllowanceByOwnerToTheSpender(address TokenOwner ,  address spender) public view returns (uint);
+    function OwnerTransferingTokensToOtherPerson(address OtherPerson , uint Tokens) public returns (bool);
+    function ApproveTokensToTakeByTheOtherPersonFromTheOwner(address OtherPerson , uint Tokens) public returns (bool);
+    function AfterOwnerApprovalTransferingTokensToOtherPerson(address TokenOwner , address OtherPerson , uint Tokens) public returns (bool);
+
+    event Approval(address  tokenOwner, address  spender,uint tokens);
+    event Transfer(address  from, address  to,uint tokens);
+}
+
+contract SafeMathLibrary // SafeMathLibrary Contract 
+{
+    
+ function sub(uint256 a, uint256 b) internal pure returns (uint256){
+       assert(b <= a);
+       return a — b;
+  }
+
+ function add(uint256 a, uint256 b) internal pure returns (uint256){
+        uint256 c = a + b;
+        assert(c >= a);
+        return c;
+  }
+ 
+}
+
+contract ManikantaToken is My_ERC20_Interface,SafeMathLibrary // ManikantaToken contract Inherits All The Functions , Variable from the My_ERC20_Interface contract and SafeMathLibrary contract
+{
+
+    string public Token_Name;
+    string public Token_Symbol;
+    uint8 public decimals; // 18 decimals is the  suggested default, dont change it
+    uint256 public _totalSupply;
+    mapping(address => uint) public balances;
+    mapping(address=> mapping (address => uint)) public allowed;
+
+   constructor public {
+     Token_Name = "ManikantaToken";
+     Token_Symbol= "MTK";
+     decimals = 18;
+   }
+
+   function SendingTokensToYourOwnAccount(address TokenOwner ,uint TotalNoOfTokens) public
+   {
+       require(TokenOwner == msg.sender , "Only Owner can send tokens to their account" );
+       balances[TokenOwner]+=TotalNoOfTokens;
+   }
+
+   function BurningTokensFromYourOwnAccount(address TokenOwner , uint TotalNoOfTokensToBeRemoved) public 
+   {
+       require(TokenOwner == msg.sender , "Only Owner can take the tokens to their account" );
+       require(TotalNoOfTokensToBeRemoved<=balances[TokenOwner],"There are not enough Tokens To Burn Out From Your Account");
+       balances[TokenOwner]-=TotalNoOfTokensToBeRemoved;
+   }
+
+   function TotalSupply() public view returns (uint256)
+   {
+       _totalSupply = balances[msg.sender];
+       return _totalSupply;
+   }
+
+   function BalanceOf(address TokenOwner) public view returns (uint)
+   {
+       require(TokenOwner == msg.sender,"Only Token Owner Can View His Number Of Tokens");
+       return balances[TokenOwner];
+   }
+
+   function TokensAllowanceByOwnerToTheSpender(address TokenOwner ,  address spender) public view returns (uint)
+   {
+       return allowed[TokenOwner][spender];
+   }
+
+
+   function OwnerTransferingTokensToOtherPerson(address OtherPerson , uint Tokens) public returns (bool);
+   {
+       TokenOwner = msg.sender;
+       require(balances[TokenOwner]<=Tokens , "First Send Tokens To Your Account First And Then Transfer To Others");
+       balances[TokenOwner] = sub(balances[msg.sender], tokens);
+       balances[OtherPerson] = add(balances[to], tokens);
+       emit Transfer(msg.sender, to, tokens);
+       return true;      
+   }
+
+
+   function ApproveTokensToTakeByTheOtherPersonFromTheOwner(address OtherPerson , uint Tokens) public returns (bool);
+   {
+      TokenOwner = msg.sender;
+      require(Tokens<=balances[TokenOwner],"Number Of Tokens You Asked Is Not Available You Can Either Reduce The No Of Tokens Or You Can Try Again Later");
+      allowed[TokenOwner][OtherPerson] = Tokens;
+      emit Approval(TokenOwner , OtherPerson , Tokens);
+      return true;
+   }
+
+
+
+   function AfterOwnerApprovalTransferingTokensToOtherPerson(address TokenOwner , address OtherPerson , uint Tokens) public returns (bool);
+   {
+    // Only in This function msg.sender is the Otherperson because on approval he is taking it directly and the message sender is the Other person
+     require(Tokens <= allowed[TokenOwner][OtherPerson] , "You are asking more than allowed Tokens kindly decrease the number" ); 
+     require(Tokens<=balances[TokenOwner],"Number Of Tokens You Asked Is Not Available You Can Either Reduce The No Of Tokens Or You Can Try Again Later");    
+     balances[TokenOwner] = sub(balances[TokenOwner], tokens);
+     allowed[TokenOwner][msg.sender] = safeSub(allowed[TokenOwner][msg.sender], tokens);
+     balances[OtherPerson] = safeAdd(balances[OtherPerson], tokens);
+     emit Transfer(TokenOwner, msg.sender, tokens); 
+     return true;
+   }
+
+   
+
+}
