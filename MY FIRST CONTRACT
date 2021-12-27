@@ -67,7 +67,7 @@ contract ManikantaToken is  SafeMathLibrary // ManikantaToken contract Inherits 
    function OwnerTransferingTokensToOtherPerson(address OtherPerson , uint Tokens) public returns (bool)
    {
        TokenOwner_1 = msg.sender;
-       require(balances[TokenOwner_1]<=Tokens , "First Send Tokens To Your Account First And Then Transfer To Others");
+       require(balances[TokenOwner_1]>=Tokens , "First Send Tokens To Your Account First And Then Transfer To Others");
        balances[TokenOwner_1] = sub(balances[TokenOwner_1], Tokens);
        balances[OtherPerson] = add(balances[OtherPerson], Tokens);
        emit Transfer(msg.sender, OtherPerson, Tokens);
