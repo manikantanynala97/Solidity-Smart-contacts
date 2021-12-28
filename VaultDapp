@@ -1,4 +1,5 @@
 pragma solidity >=0.7.0< 0.9.0;
+
 contract VaultDApp
 {
   mapping(address=>uint) public balances;// Bascially creating the unique address to each of the user and storing the amount of each user .
