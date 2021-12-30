@@ -68,7 +68,7 @@ contract ManikantaERC721Token is  SafeMathLibrary // ManikantaToken contract Inh
       return  OwnersOfParticularToken[TokenId];
    }
 
-   function TransferFrom(address from , address to , uint256 TokenId) public payable returns (bool)
+   function SafeTransferFrom(address from , address to , uint256 TokenId) public payable returns (bool)
    {
        require(OwnerOfToken(TokenId) != address(0)," This Token is not available");
        address TokenOwner = OwnerOfToken(TokenId);
@@ -79,12 +79,6 @@ contract ManikantaERC721Token is  SafeMathLibrary // ManikantaToken contract Inh
        OwnersOfParticularToken[TokenId] = to;
        emit Transfer( from,  to,  tokenId); 
        return true;
-   }
-
-   function SafeTransferFrom(address from , address to , uint256 TokenId , byte data) public payable returns (bool)
-   {
-      
-
    }
 
    function Approve(address to, uint256 TokenId) public 
