@@ -16,20 +16,23 @@ contract SafeMathLibrary // SafeMathLibrary Contract
  
 }
 
-contract ManikantaToken is  SafeMathLibrary // ManikantaToken contract Inherits All The Functions , Variable from the My_ERC20_Interface contract and SafeMathLibrary contract
+contract ManikantaERC721Token is  SafeMathLibrary // ManikantaToken contract Inherits All The Functions , Variable from the  SafeMathLibrary contract
 {
 
     string public Token_Name;
     string public Token_Symbol;
     uint8 public decimals; // 18 decimals is the  suggested default, dont change it
     mapping(address => uint) public balances; 
-    mapping(address=> mapping (address => uint)) public allowed;
+    mapping(address=> mapping (address => bool)) public operatorApprovals;
+    mapping(uint256 => address) public tokenApprovals;
     mapping(uint=> address) public OwnersOfParticularToken;
-    address TokenOwner_1;
+    address TokenOwner;
 
-    event Approval(address  tokenOwner, address  spender,uint tokens);
-    event Transfer(address  from, address  to,uint tokens);
-
+    event Transfer(address from, address to, uint256 tokenId);
+    event Approval(address owner, address approved, uint256 tokenId);
+    event ApprovalForAll(address owner, address operator, bool approved);
+    event Removal(address Owner , uint256 TokenId);
+    event Add(address Owner , uint256 TokenId);
 
    constructor() {
      Token_Name = "ManikantaToken";
@@ -37,114 +40,77 @@ contract ManikantaToken is  SafeMathLibrary // ManikantaToken contract Inherits 
      decimals = 18;
    }
 
-
-   function BalanceOf(address Owner) public view returns (uint)
+   function MintToken(address Owner , uint256 TokenId ) public returns (string)
    {
-      return balances[Owner];
+       require(OwnerOfToken(TokenId) == address(0)," This Token is already available");
+       require(msg.sender == Owner , "The Sender is not Owner");
+       OwnersOfParticularToken[TokenId] = Owner;
+       balances[Owner]+=1;
+       emit Add( Owner ,  TokenId);
+       return "You have added  the  new token  to your  account";
    }
 
-   function OwnerOf(uint256 TokenId) public view returns (address)
+
+   function BurnToken(address Owner , uint256 TokenId  ) public  returns (string)
    {
-      return OwnersOfParticularToken[TokenId];
+       require(OwnerOfToken(TokenId) != address(0)," This Token is not available");
+       address TokenOwner = OwnerOfToken(TokenId);
+       require(TokenOwner == Owner , "This Token is not yours");
+       require(msg.sender == Owner , "The Sender is not Owner");
+       delete OwnersOfParticularToken[TokenId];
+       balances[Owner]-=1;
+       emit Removal( Owner ,  TokenId);
+       return "You have burned out or removed the token from your account";
    }
 
-   function TransferFrom(address from , address to , uint TokenId)
+   function OwnerOfToken(uint256 TokenId) public view returns (address)
    {
-       balances[from]-=1;
+      return  OwnersOfParticularToken[TokenId];
+   }
+
+   function TransferFrom(address from , address to , uint256 TokenId) public payable returns (bool)
+   {
+       require(OwnerOfToken(TokenId) != address(0)," This Token is not available");
+       address TokenOwner = OwnerOfToken(TokenId);
+       require(TokenOwner == from , "This Token is not yours");
+       require(msg.sender == from  , "This Sender is not Owner ");
+       balances[from]+=1;
        balances[to]+=1;
-       OwnersOfParticularToken[TokenId]=to;
+       OwnersOfParticularToken[TokenId] = to;
+       emit Transfer( from,  to,  tokenId); 
+       return true;
    }
 
-   function SafeTransferFrom()
+   function SafeTransferFrom(address from , address to , uint256 TokenId , byte data) public payable returns (bool)
    {
+      
 
    }
 
-   function Approve()
+   function Approve(address to, uint256 TokenId) public 
    {
-
+       require(OwnerOfToken(TokenId) != address(0)," This Token is not available");
+       tokenApprovals[tokenId] = to;
+       emit Approval( OwnerOfToken(TokenId), to , TokenId);
    }
 
-   function GetApproval()
+   function GetApproval(uint256 TokenId ) public view returns(address)
+   {  
+     require(OwnerOfToken(TokenId) != address(0)," This Token is not available");
+     return  OwnersOfParticularToken[TokenId];
+   }
+
+   function SetApprovalToAll(address owner, address operator, bool approved) public 
    {
-
+      require(owner != operator , "You should approve to others not yourself"); 
+      require(msg.sender == Owner , "The Sender is not Owner");
+      operatorApprovals[owner][operator] = approved ; 
+      emit ApprovalForAll(address owner, address operator, bool approved);
    }
 
-   function IsApproval()
+   function IsApprovalToAll( address owner, address operator) public 
    {
-
+        return operatorApprovals[owner][operator];
    }
-
-   function IsApprovalToAll()
-   {
-       
-   }
-
-
-   function SendingTokensToYourOwnAccount(address TokenOwner ,uint TotalNoOfTokens) public
-   {
-       require(TokenOwner == msg.sender , "Only Owner can send tokens to their account" );
-       balances[TokenOwner]+=TotalNoOfTokens;
-   }
-
-   function BurningTokensFromYourOwnAccount(address TokenOwner , uint TotalNoOfTokensToBeRemoved) public 
-   {
-       require(TokenOwner == msg.sender , "Only Owner can take the tokens to their account" );
-       require(TotalNoOfTokensToBeRemoved<=balances[TokenOwner],"There are not enough Tokens To Burn Out From Your Account");
-       balances[TokenOwner]-=TotalNoOfTokensToBeRemoved;
-   }
-
-   function TotalSupply() public view returns (uint)
-   {
-       return  balances[msg.sender];
-   }
-
-   function BalanceOf(address TokenOwner) public view returns (uint)
-   {
-       require(TokenOwner == msg.sender,"Only Token Owner Can View His Number Of Tokens");
-       return balances[TokenOwner];
-   }
-
-   function TokensAllowanceByOwnerToTheSpender(address TokenOwner ,  address spender) public view returns (uint)
-   {
-       return allowed[TokenOwner][spender];
-   }
-
-
-   function OwnerTransferingTokensToOtherPerson(address OtherPerson , uint Tokens) public returns (bool)
-   {
-       TokenOwner_1 = msg.sender;
-       require(balances[TokenOwner_1]>=Tokens , "First Send Tokens To Your Account First And Then Transfer To Others");
-       balances[TokenOwner_1] = sub(balances[TokenOwner_1], Tokens);
-       balances[OtherPerson] = add(balances[OtherPerson], Tokens);
-       emit Transfer(msg.sender, OtherPerson, Tokens);
-       return true;      
-   }
-
-
-   function ApproveTokensToTakeByTheOtherPersonFromTheOwner(address OtherPerson , uint Tokens) public returns (bool)
-   {
-      TokenOwner_1 = msg.sender;
-      require(Tokens<=balances[TokenOwner_1],"Number Of Tokens You Asked Is Not Available You Can Either Reduce The No Of Tokens Or You Can Try Again Later");
-      allowed[TokenOwner_1][OtherPerson] = Tokens;
-      emit Approval(TokenOwner_1 , OtherPerson , Tokens);
-      return true;
-   }
-
-
-
-   function AfterOwnerApprovalTransferingTokensToOtherPerson(address TokenOwner , address OtherPerson , uint Tokens) public returns (bool)
-   {
-    // Only in This function msg.sender is the Otherperson because on approval he is taking it directly and the message sender is the Other person
-     require(Tokens <= allowed[TokenOwner][OtherPerson] , "You are asking more than allowed Tokens kindly decrease the number" ); 
-     require(Tokens<=balances[TokenOwner],"Number Of Tokens You Asked Is Not Available You Can Either Reduce The No Of Tokens Or You Can Try Again Later");    
-     balances[TokenOwner] = sub(balances[TokenOwner], Tokens);
-     allowed[TokenOwner][msg.sender] = sub(allowed[TokenOwner][msg.sender], Tokens);
-     balances[OtherPerson] = add(balances[OtherPerson], Tokens);
-     emit Transfer(TokenOwner, msg.sender, Tokens); 
-     return true;
-   }
-
-   
 
 }
