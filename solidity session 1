@@ -1,0 +1,62 @@
+1) The first thing to consider for any beginner is "Blockchain development" and "DApp development" are two different things. 
+
+ The first one refers to building an actual Blockchain itself which involves setting up some hardware i.e. Nodes, developing a consensus algorithms that will govern the system and
+ much more, while the second thing is just to develop applications using that particular blockchain. Let me explain you this in a simpler way, Its just like this - development of
+ Android OS and building Apps on it are two different things.
+
+ I am discussing here how to start with DApp development on Ethereum Blockchain means you will be able to build any applications using Ethereum blockchain and not the blockchain
+ itself.
+
+ We basically create a smart contract and after that we will basically deploy using the tool truffle , hardhat or remix on the ethereum blockchain . So now our backend part is done 
+ ,now we will create a frontend and then connect your frontend with the backend using web.js and then the whole Dapp application is done .
+ 
+ 
+2)  Explained  about 
+   * datatypes
+   * functions
+   * public , private , internal , external
+   * view , pure , payable
+   * mapping
+   * msg.value , msg.sender
+   * difference between erc 20(Non fungible Tokens) , erc 721(Fungible Tokens) , erc 1155 (Non Fungible + Fungible tokens)
+   * difference between require and if
+
+3) Explained  about
+   * A simple smart contract 
+   
+   pragma solidity>= 0.7.0<0.9.0;
+
+
+contract transfer
+{
+    
+    mapping (address => uint ) public  balances;
+    event Transfer(address you , address friend , uint money);
+    
+    
+    
+    function transfertoothers(address you , address friend , uint money ) public  returns (bool )
+    {
+       require(msg.sender == you , "only owner can transfer the money to other  account" ); 
+       require(balances[you]>=money , "You dont have enough money to transfer so please mint money to your own account");
+       balances[you] = balances[you] -money;
+       balances[friend] = balances[friend] + money;
+       emit Tranfer(you,friend,money);//fixed in the blockchain 
+       return true;
+    }
+
+    function transfertoyouraccout(address you , uint money) public  
+    {
+        require(msg.sender == you , "only owner can transfer the money to his account" );
+        balances[you] = balances[you] + money ;
+    }
+
+   
+}
+   
+   
+ 
+
+
+
+
