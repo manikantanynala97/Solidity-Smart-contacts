@@ -1,0 +1,115 @@
+pragma solidity >=0.7.0< 0.9.0; // solidity version
+
+contract SafeMathLibrary // SafeMathLibrary Contract 
+{
+    
+   function add(uint a, uint b) public pure returns (uint c) {
+        c = a + b;
+        return c;
+    }
+    function sub(uint a, uint b) public pure returns (uint c) {
+        require(b<=a);
+        c = a - b; 
+        return c;
+    } 
+ 
+}
+
+contract ManikantaERC1155Token is  SafeMathLibrary // ManikantaToken contract Inherits All The Functions , Variable from the  SafeMathLibrary contract
+{
+    mapping (uint256 => mapping(address => uint256)) internal balances; // id => (owner => balance)
+    mapping (address => mapping(address => bool)) internal operatorApproval; //  owner => (operator => approved)
+
+    event TransferSingle(address indexed _operator, address indexed _from, address indexed _to, uint256 _id, uint256 _value);
+    event TransferBatch(address indexed _operator, address indexed _from, address indexed _to, uint256[] _ids, uint256[] _values);
+    event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved);
+
+     string public Token_Name ;
+     string public Token_Symbol ;
+     uint8 public decimals; // 18 decimals is the  suggested default, dont change it
+
+      constructor() {
+        Token_Name = "ManikantaToken";
+        Token_Symbol= "MTK";
+        decimals = 18;
+   }
+
+
+   function safeTransferFrom(address _from, address _to, uint256 _id, uint256 _value) external
+   {
+        require(_to != address(0x0), "_to must be non-zero.");
+        require(_from == msg.sender || operatorApproval[_from][msg.sender] == true, "Need operator approval for 3rd party transfers.");
+
+        // SafeMath will throw with insuficient funds _from
+        // or if _id is not valid (balance will be 0)
+        balances[_id][_from] = balances[_id][_from].sub(balances[_id][_from],_value);
+        balances[_id][_to]   = balances[_id][_from].add(balances[_id][_to],_value);
+
+        // MUST emit event
+        emit TransferSingle(msg.sender, _from, _to, _id, _value);
+
+   }
+
+   function safeBatchTransferFrom(address _from, address _to, uint256[] calldata _ids, uint256[] calldata _values) external
+   {
+
+        require(_ids.length == _values.length, "_ids and _values array length must match.");
+        require(_from == msg.sender || operatorApproval[_from][msg.sender] == true, "Need operator approval for 3rd party transfers.");
+
+        for (uint256 i = 0; i < _ids.length; ++i) {
+            uint256 id = _ids[i];
+            uint256 value = _values[i];
+
+            // SafeMath will throw with insuficient funds _from
+            // or if _id is not valid (balance will be 0)
+            balances[id][_from] = balances[id][_from].sub(balances[id][_from],value);
+            balances[id][_to]   = balances[id][_from].add(balances[id][_to],value);
+        }
+
+        // Note: instead of the below batch versions of event and acceptance check you MAY have emitted a TransferSingle
+        // event and a subsequent call to _doSafeTransferAcceptanceCheck in above loop for each balance change instead.
+        // Or emitted a TransferSingle event for each in the loop and then the single _doSafeBatchTransferAcceptanceCheck below.
+        // However it is implemented the balance changes and events MUST match when a check (i.e. calling an external contract) is done.
+
+        // MUST emit event
+        emit TransferBatch(msg.sender, _from, _to, _ids, _values);
+
+
+   }
+
+   function balanceOf(address _owner, uint256 _id) external view returns (uint256)
+   {
+         return balances[_id][_owner];
+   }
+
+   function balanceOfBatch(address[] calldata _owners, uint256[] calldata _ids) external view returns (uint256[] memory)
+    {
+        require(_owners.length == _ids.length);
+        uint256[] memory balances_ = new uint256[](_owners.length);
+        for (uint256 i = 0; i < _owners.length; ++i) {
+            balances_[i] = balances[_ids[i]][_owners[i]];
+        }
+        return balances_;
+    }
+
+   function setApprovalForAll(address _operator, bool _approved) external
+   {
+       operatorApproval[msg.sender][_operator] = _approved;
+       emit ApprovalForAll(msg.sender, _operator, _approved);
+   }  
+
+   function isApprovedForAll(address _owner, address _operator) external view returns (bool)
+   {
+        return operatorApproval[_owner][_operator];
+   }
+ 
+   
+
+}
+
+
+
+
+
+
+
